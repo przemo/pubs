@@ -1,0 +1,261 @@
+---
+title: "A Short Map Tutorial"
+subtitle: "Introduction to QGIS"
+author: "Matthew Jura"
+date: "`r Sys.Date()`"
+output:
+  tufte::tufte_html: default
+  tufte::tufte_handout:
+    citation_package: natbib
+    latex_engine: xelatex
+  tufte::tufte_book:
+    citation_package: natbib
+    latex_engine: xelatex
+link-citations: yes
+---
+
+```{r setup, include=FALSE}
+library(tufte)
+# invalidate cache when the tufte version changes
+knitr::opts_chunk$set(tidy = FALSE, cache.extra = packageVersion('tufte'))
+options(htmltools.dir.version = FALSE)
+
+```
+
+
+# Prerequisites
+
+## Download software
+
+For simpplicity of the installation and functionality QGIS seems to be a ligitimate 
+choice. The software is available on major OS platforms (Windows, macOS, Linux). 
+You can find a software [here](http://www.qgis.org/en/site/forusers/download.html) 
+and download version that is compatibile with your
+operating system. The file is quite big, and installation process may take a while.
+After downloading an installer, just follow instructions. There is no need to 
+download additional data sources during the installation process. Although, you 
+can do it later. 
+
+<!-- ## Data for the tutorial -->
+
+<!-- Please, download the the data archive available here.  -->
+<!-- Extract the archive and keep the files in one folder.  -->
+<!-- Later I will explain what is exactly in those files.  -->
+
+## The Goal
+
+1.  Introduction to GIS data types and visualizations.
+2.  Create simple thematic maps and integrate them with external data sources.
+3.  Create and export a map for further publication or post-processing.
+
+This short introduction is intended to only familiarize you with basic functions
+of GIS and give an overview of spatial data. 
+
+# GIS Data
+
+## Spatial Objects (data types)
+
+### Vector data
+
+1.  Polygons - to represent areas or surfaces: boarders of countries, states, coutnies, or islands.
+2.  Lines - mostly for roads or rivers. They are different from lines to create a polygon.
+3.  Points - a particular point in space (a pin on a map); specific site: hospital, firestation, household, etc.
+
+### Raster data
+
+A grid of georeferenced cells (usually squared pixels) with assigned value, similarly to regular bitmap image. 
+
+Vector object can be scaled in any direction without loosing quality of an image, which is not a case in raster data.
+It may be impossible to change a projection of a raster images, since raster cells are coupled with particular reference 
+system. When projection changes the shape of cells may change too. 
+
+## File formats
+
+Spatial file formats correspond closely to the spatial types. We focus on vector files, since they
+are the most flexible and easy to make visualizations. 
+
+
+1.  [Shapefile](https://en.wikipedia.org/wiki/Shapefile) format - SHP - contains only spatial information;  feature geometry, this file has to be accompanied by at least two other files to make a data complete:
+
+* .shx - spatial index file
+
+* .dbf -- dBase^[One of many different database formats keeping all the information in one file. The reason to keep attributable information in database format is to facilitate database queries in GIS software.] file format which contains all attributes data -- all other non-geographical information about each spatial element in the *.shp file; e.g. name, number of population, time, etc.
+
+* other files contain additional information specific to indexing and other metadata; they are not required but may be created by additinal software.
+
+2.  [KML](https://en.wikipedia.org/wiki/Keyhole_Markup_Language) format - Keyhole Markup Language - XML based file format to encapsulate both geographically referenced and attributable data.
+
+3.  GeoTIFF - raster image TIFF format with additional layer of geo-referencing information. The data can be very precise, however it may contain only a single feature for one pixel element.
+
+4.  Many more - you can find more information about different spatial data file formats [here](https://en.wikipedia.org/wiki/GIS_file_formats).
+
+## Types of thematic maps
+
+[Choropleth maps](https://en.wikipedia.org/wiki/Choropleth_map) -- made of polygons with set of features based on attributable information. E.g. hue of a color is to depict change of some quantitative information.
+
+![Choropleth map](https://support.sas.com/techsup/notes/v8/25/addl/fusion_25555_1_g25555.gif)
+
+Cartograms (proportional symbol) - spatial elements are scaled based on some 
+quantity. Commonly used to display more than one variable; but they can be easily be very clunky.
+
+![Cartogram](http://www.ncgia.ucsb.edu/projects/Cartogram_Central/cartogram_examples/dorling3.jpg)
+
+
+Isopleth (isarithmic) --  show smooth changes of quantitative phenomenon (precipitation, air pressure, elevation). 
+^[One option are density maps - based on point information; they show how the density of points (e.g. crimes) is distributed over space.]
+
+![Isopleth map](https://flutrackers.com/forum/filedata/fetch?id=664809)
+
+Dot maps - plain dots plotted over a geographical region to depict spatial distribution of points. 
+To plot many points overlapping on small areas it is better to convert them to densities, or aggregate 
+them into arbitrary polygons. Common practice is to use hexagonal polygons. 
+
+![Dot map](https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Lancaster_County_Existing_Covered_Bridges_Dot_Map.png/1127px-Lancaster_County_Existing_Covered_Bridges_Dot_Map.png)
+
+[Dasymetric maps](https://en.wikipedia.org/wiki/Dasymetric_map) -- a mix of _isopleth_ and _choropleth_ map. Usually incorporates additional statistical procedures like interpolation; although may help to depict a phenomenon in more realistic way.
+
+![Dosymetric maps](http://geography.wr.usgs.gov/science/dasymetric/images/zoom2_lowres.jpg)
+
+`r margin_note('All the maps listed can be overlay on a reference (base) map to help find the right location or familiarize reader with a region. Good examples are Google Maps or OpenStreet Map.')`
+
+## Projections
+
+
+To draw 3-dimensional space on a flat surface of a map we need to make a
+projection. Different projections are available to preserve specific data:
+distance, area, shape, etc. The original spatial data describing locations on
+Earth (a sphere) uses latitude and longitude expressed in degrees (minutes,
+seconds). In order to change the units, for example to calculate a  distance (in miles
+or kilometers) we need to project spherical dimensions to flat 2-dimensional 
+surface. 
+
+We can use projections that still retain angular units but the lines of latitude
+and longitude for represented as straight lines - the most common is [Mercator
+projection](https://en.wikipedia.org/wiki/Mercator_projection); which is compliant
+with WGS84 coordinate system. Mercator projection is suitable for visualizing
+large areas. In case of small regions or countries there are many different 
+projections available. It is common that projection names are after country names
+or some geographical names.
+
+This may be very important when you try overlay maps from different sources with
+completely different projections. Without unifying projections visual results
+may be completely wrong. Many of the geocoding services provide latitude and
+longitude in degrees with decimal precision. If you obtain the location in
+degrees, minutes and seconds you need to make the unit conversion first. The
+reference point for all locations (at most of the cases) is the central Meridian
+located in Greenwich, London.
+
+# Making a Thematic Map
+
+## Adding external data file to a map
+
+1.  With created new project file add a vector layer from the toolbox on the left-hand side.
+2.  Open map attributes dialog-box in order to inspect attribute data and identify a variable which will help to match records with additional information.
+3.  _Link_ external non-georeferenced data file (text or CSV).
+4.  Create a join between the spatial layer and the external data file.
+    1.   Right-click on the target layer, choose *Properties*.
+    2.   In the new dialog-box select tab *Joins*.
+    3.   Click '+' sign to add a new join.
+    4.   Select which layers are joined and which variable is used to match two datasets (match between the records in the *.dbf file and new source in external dataset).
+    5.   Accept changes, right click again on the target layer and choose 'Open Attribute table'.
+    6.   Inspect if the correct variables were added.
+5.  Assign colors and labels to the geographical locations (see below).
+
+The external data file is only linked to the spatial object. 
+Any changes made in the external dataset will be reflected once QGIS reloads the project (e.g. when you restart it).
+
+## Creating new regions based on geometries
+
+1.  On the open layer inspect the attributes table to identify a feature based on which new region will be created.
+    1.  To create a map of regions based on counties *.shp file, we have to add a feature to identify which county is assigned to a specific region.
+    2.  The new feature can exist in the external data file (e.g. CSV) which has to be merged with spatial object first (as described above).
+    3.  Merging spatial objects into larger spatial objects results in creating a new *.shp file.
+2.  From menu Vector -> Geoprocessing Tools -> Dissolve
+    1.  Select the vector layer to be dissolved.
+    2.  Check the field (feature) on which the areas will be merged.
+    3.  Define the name of the output *shapefile*. In this case we create a new spatial file.
+    4.  Select 'Add result to canvas', so the new shapefile is added to the project.
+3.  Additional attributes can be added to the new shapefile.
+
+## Coloring regions and adding labels
+
+1.  All coloring and labeling options are available in the 'Properties' dialog box.
+2.  Just right click  on a desired layer and select 'Properties'. Or double click on the layer.
+3.  There are two tabs for Styles and Labels.
+    1. Styles give you options for coloring spatial objects based on different color schemes.
+    2. Labels give you options to add labels and style them. Labels are created from a variable that should be in Attributes table.
+
+### Adding labels positioned manually
+
+By default text labels are added relatively to the spatial object: point, line, polygon. 
+However, sometimes you may need to manually adjust the position of a text label, because the default 
+position makes another element underneath invisible. 
+
+1.  Open layer *Properties*
+2.  In the *Fields* tab add two new variables: 'lab_x' and 'lab_y'. The data type for both should be numeric (float).
+3.  Open *Labels* tab (still in the same *Properties* dialog.
+4.  Select option *Show labels in this layer*. Select which variable is a source of the label for each spatial element.
+5.  Select *Placement* properties on the list which is in the lower part of the dialog-box:
+    1.  Select placement type to *Free*.
+    2.  In *Data defined* section select the attributes for label *Coordinates*.
+    3.  'lab_x' for X coordinates and 'lab_y' for Y coordinates.
+    4.  The attributes (fields) we created in the step 2 will keep the coordinates for each text label, so later you can change them manually.
+6.  Accept the changes and close the *Properties* dialog-box.
+7.  To manually change a position of the label activate *edit mode* for the layer.
+8.  Choose 'Change label' tool from the toolbar and adjust label position manually.
+
+You can always add more attributes for other label features (visibility, angle, color). 
+The process is always the same: you need to create new attribute then link it to label 
+feature in the *Properties* dialog box. 
+
+## Creating an output map
+
+1.  Add new map composer from the toolbar.
+2.  It opens a new map creator, which later you can reuse.
+3.  Add a map to the map canvas. All the tools are located in the left-hand side toolbar.
+4.  You can add maps, labels, legends using tools.
+5.  Export a map to a desired file format (PNG, PDF, SVG).
+
+Since QGIS is not a perfect tool some glitches are present. Particularly with
+making an output map the interface is not really responsive in fitting a map in
+desired box on the canvas. In some situations you may have to put the exact
+scale of the map. There is a number of options in settings panel located on the
+right side of the map creator dialog box.
+
+If you want to just save the map as image, without the legend, you can choose
+*Save as Image* option from the *Project* menu to save the map the way it is
+currently visible in the main window.
+
+## Keep in mind
+
+1.  To apply any changes to spatial objects on any layer you have to activate _Edit mode_ first. Disabling edit mode results in saving changes to a *.shp file.
+2.  QGIS project does not encapsulate any source files used as layers. The file paths to the source files (*.shp and related files) are relative to the location of a project. When you move your project file elsewhere you need to move all the associated files. It is better to keep all the files in one folder.
+3.  The original spatial objects (e.g. polygons) always sit in the *.shp file. When you create new object you have to save it in a new *.shp file.
+4.  If you have few layers referenced to the same *.shp file, any change in *.shp will be reflected in all the layers.
+
+# Cartographic tips
+
+1.  In color graduated scales, do not use more than 5 shades, or 6 for diverging scales. Excellent guide is available [here](http://www.sciencedirect.com/science/article/pii/S0749379705003582).
+2.  If you map something about people (e.g. incidence) use *rates*. Crude values don't add any value. Normalize your data.
+3.  It is better to
+4.  Always match color scheme to your data. Sequential color scale for continuous one directional data; divergent scale for data when a middle point is a reference value; categorical scale for categorical data.
+5.  When plotting densities using a continuous color scale NEVER use rainbow colors.
+6.  The most advised cutpoints for continuous variables are based on quantiles; however it may strongly depend on your data distribution and range of values. You may consider other break types: natural, Jenks, deviation or equal interval.
+7.  Text on maps - the best option is to use upper right corner in relation to a point. [Here](https://spark-public.s3.amazonaws.com/maps/images/Lesson%25205/L5_Figure20.jpg) is a guide showing the order of placing a text label.
+
+## Making data spatial (geocoding)
+
+In case you need convert your data (e.g. address) to a legitimate geographic information: latitude and longitude 
+you need to geocode this information. With single addresses it is very simple, you can use for example Google Maps. 
+In case you have 100 addresses it may be a little time consuming. To make batch conversion you can utilize Google Fusion Tables
+or OpenRefine (formerly known as GoogleRefine). Both software offer a batch geocoding using Google maps servers free of charge up to 5k records a day.
+
+# Additional resources
+
+[Cartographic Boundary Shapefiles](https://www.census.gov/geo/maps-data/data/tiger-cart-boundary.html) - US Census Bureau
+
+[Many data sources](http://www.colorado.edu/geography/gcraft/notes/sources/sources_f.html) are available at the University of Colorado website. 
+
+[QGIS Book (Ed.3)](https://play.google.com/store/books/details/Anita_Graser_Learning_QGIS?id=rUXiCwAAQBAJ) - QGIS book written by the QGIS creator Anita Graser
+
+[Coursera Specialization in GIS](https://www.coursera.org/specializations/gis) - Never took it, but you can always audit the course. 
